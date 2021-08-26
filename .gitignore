@@ -42,7 +42,7 @@ bld/
 Generated\ Files/
 
 # Ignore config
-App.config
+TruthOrUWU/App.config
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
