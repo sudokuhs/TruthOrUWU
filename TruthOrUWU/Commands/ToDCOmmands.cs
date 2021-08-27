@@ -5,7 +5,9 @@ using DSharpPlus.CommandsNext.Attributes;
 using System.Collections.Generic;
 using System.Text;
 using System.Collections;
+using System.Timers;
 using System.Threading;
+using DSharpPlus.Entities;
 
 namespace truthOrUwU.Commands
 {
@@ -14,7 +16,10 @@ namespace truthOrUwU.Commands
         private List<User> queue = new List<User>();
         private ulong randPoint;
         private bool gameState = false;
+        private bool active = false;
         private string list;
+        private DiscordChannel channel;
+        private System.Timers.Timer timer;
 
         [Command("ping")]
         public async Task Ping(CommandContext ctx)
@@ -50,7 +55,7 @@ namespace truthOrUwU.Commands
                             await queue.Shuffle();
                             randPoint = queue[queue.Count - 1].id;
                             FormatQ();
-                            await ctx.RespondAsync($"{ctx.User.Username} has been removed from the queue causing a reshuffle." + Environment.NewLine + $"<@{queue[1].id}> is now asking <@{queue[0].id}>." + list);
+                            await ctx.RespondAsync($"{ctx.User.Username} has been removed from the queue causing a reshuffle." + Environment.NewLine + $"<@{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
                         }
                         else
                         {
@@ -62,7 +67,7 @@ namespace truthOrUwU.Commands
                     {
                         queue.RemoveAll(Player => Player.id == ctx.User.Id);
                         FormatQ();
-                        await ctx.RespondAsync($"{ctx.User.Username}, you have been removed from the queue." + Environment.NewLine + $"So, <@{queue[1].id}> is now asking <@{queue[0].id}>." + list);
+                        await ctx.RespondAsync($"{ctx.User.Username}, you have been removed from the queue." + Environment.NewLine + $"So, <@{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
                     }
                     else
                     {
@@ -101,7 +106,13 @@ namespace truthOrUwU.Commands
                         randPoint = queue[queue.Count - 1].id;
                         gameState = true;
                         FormatQ();
-                        await ctx.RespondAsync("Queue started!" + Environment.NewLine + $"<@{queue[1].id}> is currently asking <@{queue[0].id}>." + list);
+                        await ctx.RespondAsync("Queue started!" + Environment.NewLine + $"<@{queue[queue.Count - 1].id}> is currently asking <@{queue[0].id}>." + list);
+                        channel = ctx.Channel;
+                        // Create a 30 min timer 
+                        timer = new System.Timers.Timer(1800000);
+                        // Hook up the Elapsed event for the timer.
+                        timer.Elapsed += OnTimedEvent;
+                        timer.Enabled = true;
                     }
                     else
                     {
@@ -123,19 +134,20 @@ namespace truthOrUwU.Commands
         {
             if (gameState == true)
             {
+                active = true;
                 if (randPoint == queue[0].id)
                 {
                     await queue.Shuffle();
                     randPoint = queue[queue.Count - 1].id;
                     FormatQ();
-                    await ctx.RespondAsync($"Queue shuffled!" + Environment.NewLine + $"<@{queue[1].id}> is currently asking <@{queue[0].id}>." + list);
+                    await ctx.RespondAsync($"Queue shuffled!" + Environment.NewLine + $"<@{queue[queue.Count - 1].id}> is currently asking <@{queue[0].id}>." + list);
                 }
                 else
                 {
                     queue.Add(queue[0]);
                     queue.RemoveAt(0);
                     FormatQ();
-                    await ctx.RespondAsync($"<@{queue[queue.Count].id}> is currently asking <@{queue[0].id}>." + list);
+                    await ctx.RespondAsync($"<@{queue[queue.Count - 1].id}> is currently asking <@{queue[0].id}>." + list);
                 }
             }
             else
@@ -165,13 +177,13 @@ namespace truthOrUwU.Commands
                             await queue.Shuffle();
                             randPoint = queue[queue.Count - 1].id;
                             FormatQ();
-                            await ctx.RespondAsync($"{ctx.User.Username} has been removed from the queue causing a reshuffle." + Environment.NewLine + $"<@{queue[1].id}> is now asking <@{queue[0].id}>." + list);
+                            await ctx.RespondAsync($"{ctx.User.Username} has been removed from the queue causing a reshuffle." + Environment.NewLine + $"<@{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
                         }
                         else
                         {
                             queue.RemoveAt(0);
                             FormatQ();
-                            await ctx.RespondAsync("Askee skipped and removed from the queue." + Environment.NewLine + $"<@{queue[1].id}> is now asking <@{queue[0].id}>." + list);
+                            await ctx.RespondAsync("Askee skipped and removed from the queue." + Environment.NewLine + $"<@{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
                         }
                     }
                     else if (queue.Count < 3)
@@ -186,13 +198,13 @@ namespace truthOrUwU.Commands
                         randPoint = queue[0].id;
                         queue.RemoveAt(1);
                         FormatQ();
-                        await ctx.RespondAsync("Asker skipped and removed from the queue. Asker replaced and shuffle moved." + Environment.NewLine + $"<@{queue[1].id}> is now asking <@{queue[0].id}>." + list);
+                        await ctx.RespondAsync("Asker skipped and removed from the queue. Asker replaced and shuffle moved." + Environment.NewLine + $"<@{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
                     }
                     else
                     {
                         queue.RemoveAt(1);
                         FormatQ();
-                        await ctx.RespondAsync("Asker skipped and removed from the queue. The asker has been replaced." + Environment.NewLine + $"<@{queue[1].id}> is now asking <@{queue[0].id}>." + list);
+                        await ctx.RespondAsync("Asker skipped and removed from the queue. The asker has been replaced." + Environment.NewLine + $"<@{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
                     }
                 }
                 else
@@ -222,6 +234,7 @@ namespace truthOrUwU.Commands
         {
             int x = 0;
             Int32.TryParse(ctx.RawArgumentString, out x);
+
             if (0 < x && x < queue.Count + 1)
             {
                 if (queue.Count > 2)
@@ -234,7 +247,7 @@ namespace truthOrUwU.Commands
                             await queue.Shuffle();
                             randPoint = queue[queue.Count - 1].id;
                             FormatQ();
-                            await ctx.RespondAsync("A user has been removed from the queue causing a reshuffle." + Environment.NewLine + $"<@{queue[1].id}> is now asking <@{queue[0].id}>." + list);
+                            await ctx.RespondAsync("A user has been removed from the queue causing a reshuffle." + Environment.NewLine + $"<@{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
                         }
                         else
                         {
@@ -246,7 +259,7 @@ namespace truthOrUwU.Commands
                     {
                         queue.RemoveAt(x - 1);
                         FormatQ();
-                        await ctx.RespondAsync("A user has been removed from the queue causing a change in asker/askee." + Environment.NewLine + $"So, <@{queue[1].id}> is now asking <@{queue[0].id}>." + list);
+                        await ctx.RespondAsync("A user has been removed from the queue causing a change in asker/askee." + Environment.NewLine + $"So, <{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
                     }
                     else
                     {
@@ -318,6 +331,23 @@ namespace truthOrUwU.Commands
             }
             list = list + bar + Environment.NewLine + "Shuffles after the player with the :game_die: is asked.";
         }
+        public void OnTimedEvent(object source, ElapsedEventArgs e)
+        {
+            if (active)
+            {
+                active = false;
+            }
+            else
+            {
+                queue.Clear();
+                gameState = false;
+                var msg = new DiscordMessageBuilder()
+                    .WithContent($"All users removed from the queue due to inactivity.")
+                    .SendAsync(channel);
+                timer.Enabled = false;
+            }
+
+        }
     }
     public static class ThreadSafeRandom
     {
@@ -328,7 +358,6 @@ namespace truthOrUwU.Commands
             get { return Local ?? (Local = new Random(unchecked(Environment.TickCount * 31 + Thread.CurrentThread.ManagedThreadId))); }
         }
     }
-
     static class MyExtensions
     {
         public static Task Shuffle<T>(this IList<T> list)
