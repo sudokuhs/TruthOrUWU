@@ -298,7 +298,7 @@ namespace truthOrUwU.Commands
                 await ctx.RespondAsync($"{ctx.User.Username}, the game is not currently in progress, if you wish to start the game use the p command." + Environment.NewLine + "List of users currently in queue:" + list);
             }
         }
-        [Command("?")]
+        [Command("?"), Aliases("help")]
         public async Task Help(CommandContext ctx)
         {
             await ctx.RespondAsync("```Truth or Dare Bot" + Environment.NewLine + Environment.NewLine + "Command | Function" + Environment.NewLine + "!q      | adds you to the queue" + Environment.NewLine + "!r      | removes you from the queue" + Environment.NewLine + "!p      | starts the game" + Environment.NewLine + "!n      | advances the queue by one" + Environment.NewLine + "!d      | displays the current queue. " + Environment.NewLine + "!s      | skips the current asker and removes them from the queue unless used by the asker, in that case it removes the askee." + Environment.NewLine + Environment.NewLine + "Staff Commands:" + Environment.NewLine + "!purge  | removes all users from the queue." + Environment.NewLine + "!ro  uid | removes user from queue with specified uid.```");

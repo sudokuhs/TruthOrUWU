@@ -27,7 +27,9 @@ namespace truthOrUwU
             }); 
             var commands = discord.UseCommandsNext(new CommandsNextConfiguration() 
             { 
-                StringPrefixes = new[] {ConfigurationManager.AppSettings["Prefix"]}
+                StringPrefixes = new[] {ConfigurationManager.AppSettings["Prefix"]},
+                EnableDefaultHelp = false,
+                EnableDms = false
             });
             commands.RegisterCommands<ToDCommands>();
 
