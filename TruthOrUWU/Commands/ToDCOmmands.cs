@@ -230,16 +230,14 @@ namespace truthOrUwU.Commands
             }
         }
         [Command("ro"), RequireRolesAttribute(RoleCheckMode.All, "Staff")]
-        public async Task KickUser(CommandContext ctx)
-        {
-            int x = 0;
-            Int32.TryParse(ctx.RawArgumentString, out x);
-
-            if (0 < x && x < queue.Count + 1)
+        public async Task KickUser(CommandContext ctx, ulong userid)
+        { 
+            int x = queue.FindIndex(Player => Player.id == userid);
+            if (-1 < x && x < queue.Count)
             {
                 if (queue.Count > 2)
                 {
-                    if (randPoint == queue[x - 1].id)
+                    if (randPoint == queue[x].id)
                     {
                         if (queue[0].id == randPoint)
                         {
@@ -247,42 +245,44 @@ namespace truthOrUwU.Commands
                             await queue.Shuffle();
                             randPoint = queue[queue.Count - 1].id;
                             FormatQ();
-                            await ctx.RespondAsync("A user has been removed from the queue causing a reshuffle." + Environment.NewLine + $"<@{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
+                            await ctx.RespondAsync($"User <@{userid}> has been removed from the queue causing a reshuffle." + Environment.NewLine + $"<@{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
                         }
                         else
                         {
                             randPoint = queue[queue.FindIndex(Player => Player.id == randPoint) - 1].id;
                             queue.RemoveAt(queue.FindIndex(Player => Player.id == randPoint) + 1);
+                            await ctx.RespondAsync($"User <@{userid}> removed from the queue.");
+
                         }
                     }
-                    else if (x < 3)
+                    else if (x == 0 | x == queue.Count - 1)
                     {
-                        queue.RemoveAt(x - 1);
+                        queue.RemoveAt(x);
                         FormatQ();
-                        await ctx.RespondAsync("A user has been removed from the queue causing a change in asker/askee." + Environment.NewLine + $"So, <{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
+                        await ctx.RespondAsync($"User <@{userid}> has been removed from the queue causing a change in asker/askee." + Environment.NewLine + $"So, <{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
                     }
                     else
                     {
-                        queue.RemoveAt(x - 1);
-                        await ctx.RespondAsync($"User removed from the queue.");
+                        queue.RemoveAt(x);
+                        await ctx.RespondAsync($"User <@{userid}> removed from the queue.");
                     }
                 }
                 else if (gameState == true)
                 {
                     gameState = false;
-                    queue.RemoveAt(x - 1);
+                    queue.RemoveAt(x);
                     randPoint = 0;
-                    await ctx.RespondAsync("A user has been removed from the queue. There are no longer enough players for play to continue, the game has been stopped.");
+                    await ctx.RespondAsync($"User <@{userid}> has been removed from the queue. There are no longer enough players for play to continue, the game has been stopped.");
                 }
                 else
                 {
-                    queue.RemoveAt(x - 1);
-                    await ctx.RespondAsync($"User removed from the queue.");
+                    queue.RemoveAt(x);
+                    await ctx.RespondAsync($"User <@{userid}> removed from the queue.");
                 }
             }
             else
             {
-                await ctx.RespondAsync("The ro command is formatted `+ro #` replacing the '#' with the user you wish to remove's current position in the queue. Please try again with valid formatting.");
+                await ctx.RespondAsync("Invalid uid or user not in queue.");
             }
         }
         [Command("d")]
@@ -301,7 +301,7 @@ namespace truthOrUwU.Commands
         [Command("?")]
         public async Task Help(CommandContext ctx)
         {
-            await ctx.RespondAsync("```Truth or Dare Bot" + Environment.NewLine + Environment.NewLine + "Command | Function" + Environment.NewLine + "!q      | adds you to the queue" + Environment.NewLine + "!r      | removes you from the queue" + Environment.NewLine + "!p      | starts the game" + Environment.NewLine + "!n      | advances the queue by one" + Environment.NewLine + "!d      | displays the current queue. " + Environment.NewLine + "!s      | skips the current asker and removes them from the queue unless used by the asker, in that case it removes the askee." + Environment.NewLine + Environment.NewLine + "Staff Commands:" + Environment.NewLine + "!purge  | removes all users from the queue." + Environment.NewLine + "!ro  #  | removes the user at position # from the queue.```");
+            await ctx.RespondAsync("```Truth or Dare Bot" + Environment.NewLine + Environment.NewLine + "Command | Function" + Environment.NewLine + "!q      | adds you to the queue" + Environment.NewLine + "!r      | removes you from the queue" + Environment.NewLine + "!p      | starts the game" + Environment.NewLine + "!n      | advances the queue by one" + Environment.NewLine + "!d      | displays the current queue. " + Environment.NewLine + "!s      | skips the current asker and removes them from the queue unless used by the asker, in that case it removes the askee." + Environment.NewLine + Environment.NewLine + "Staff Commands:" + Environment.NewLine + "!purge  | removes all users from the queue." + Environment.NewLine + "!ro  uid | removes user from queue with specified uid.```");
         }
         [Command("Lily")]
         public async Task Lily(CommandContext ctx)
