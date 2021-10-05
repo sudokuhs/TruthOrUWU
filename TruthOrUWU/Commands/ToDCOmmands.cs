@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
@@ -113,6 +113,7 @@ namespace truthOrUwU.Commands
                         // Hook up the Elapsed event for the timer.
                         timer.Elapsed += OnTimedEvent;
                         timer.Enabled = true;
+                        timer.AutoReset = false;
                     }
                     else
                     {
@@ -222,6 +223,11 @@ namespace truthOrUwU.Commands
         {
             queue.Clear();
             await ctx.RespondAsync($"All users removed from the queue.");
+            if (timer.Enabled)
+            {
+                timer.Stop();
+                timer.Dispose();
+            }
             if (gameState == true)
             {
                 gameState = false;
@@ -231,7 +237,7 @@ namespace truthOrUwU.Commands
         }
         [Command("ro"), RequireRolesAttribute(RoleCheckMode.All, "Staff")]
         public async Task KickUser(CommandContext ctx, ulong userid)
-        { 
+        {
             int x = queue.FindIndex(Player => Player.id == userid);
             if (-1 < x && x < queue.Count)
             {
@@ -245,7 +251,14 @@ namespace truthOrUwU.Commands
                             await queue.Shuffle();
                             randPoint = queue[queue.Count - 1].id;
                             FormatQ();
-                            await ctx.RespondAsync($"User <@{userid}> has been removed from the queue causing a reshuffle." + Environment.NewLine + $"<@{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
+                            if (gameState)
+                            {
+                                await ctx.RespondAsync($"User <@{userid}> has been removed from the queue causing a reshuffle." + Environment.NewLine + $"<@{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
+                            }
+                            else
+                            {
+                                await ctx.RespondAsync($"User <@{userid}> has been removed from the queue causing a reshuffle." +  list);
+                            }
                         }
                         else
                         {
@@ -259,7 +272,14 @@ namespace truthOrUwU.Commands
                     {
                         queue.RemoveAt(x);
                         FormatQ();
-                        await ctx.RespondAsync($"User <@{userid}> has been removed from the queue causing a change in asker/askee." + Environment.NewLine + $"So, <{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
+                        if (gameState)
+                        {
+                            await ctx.RespondAsync($"User <@{userid}> has been removed from the queue causing a change in asker/askee." + Environment.NewLine + $"So, <@{queue[queue.Count - 1].id}> is now asking <@{queue[0].id}>." + list);
+                        }
+                        else
+                        {
+                            await ctx.RespondAsync($"User <@{userid}> has been removed from the queue." + list);
+                        }
                     }
                     else
                     {
@@ -336,6 +356,7 @@ namespace truthOrUwU.Commands
             if (active)
             {
                 active = false;
+                timer.Start();
             }
             else
             {
@@ -344,7 +365,7 @@ namespace truthOrUwU.Commands
                 var msg = new DiscordMessageBuilder()
                     .WithContent($"All users removed from the queue due to inactivity.")
                     .SendAsync(channel);
-                timer.Enabled = false;
+                timer.Dispose();
             }
 
         }
@@ -375,4 +396,3 @@ namespace truthOrUwU.Commands
         }
     }
 }
-
